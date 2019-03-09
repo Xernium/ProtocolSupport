@@ -31,7 +31,7 @@ import protocolsupportbuildprocessor.Preload;
 @Preload
 public abstract class AbstractStatusListener {
 
-	private static final int statusThreads = JavaSystemProperty.getValue("statusthreads", 2, Integer::parseInt);
+	private static final int statusThreads = JavaSystemProperty.getValue("statusthreads", 20, Integer::parseInt);
 	private static final int statusThreadKeepAlive = JavaSystemProperty.getValue("statusthreadskeepalive", 60, Integer::parseInt);
 
 	static {

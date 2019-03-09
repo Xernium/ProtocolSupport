@@ -28,7 +28,7 @@ import raknetserver.pipeline.raknet.RakNetPacketConnectionEstablishHandler.PingH
 
 public class PEProxyServerInfoHandler implements PingHandler {
 
-	private static final int statusThreads = JavaSystemProperty.getValue("pestatusthreads", 2, Integer::parseInt);
+	private static final int statusThreads = JavaSystemProperty.getValue("pestatusthreads", 20, Integer::parseInt);
 	private static final int statusThreadKeepAlive = JavaSystemProperty.getValue("pestatusthreadskeepalive", 60, Integer::parseInt);
 
 	static {
