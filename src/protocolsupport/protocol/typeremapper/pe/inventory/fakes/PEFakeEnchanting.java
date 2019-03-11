@@ -2,7 +2,6 @@ package protocolsupport.protocol.typeremapper.pe.inventory.fakes;
 
 import org.bukkit.Material;
 
-import protocolsupport.api.MaterialAPI;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleInventoryEnchant;
 import protocolsupport.protocol.packet.middleimpl.ClientBoundPacketData;
@@ -11,31 +10,30 @@ import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.Inventor
 import protocolsupport.protocol.packet.middleimpl.serverbound.play.v_pe.GodPacket.InvTransaction;
 import protocolsupport.protocol.storage.netcache.NetworkDataCache;
 import protocolsupport.protocol.typeremapper.pe.inventory.PEInventory.PESource;
-import protocolsupport.protocol.utils.types.NetworkItemStack;
-import protocolsupport.protocol.utils.types.nbt.NBTCompound;
-import protocolsupport.protocol.utils.types.nbt.NBTList;
-import protocolsupport.protocol.utils.types.nbt.NBTShort;
-import protocolsupport.protocol.utils.types.nbt.NBTString;
-import protocolsupport.protocol.utils.types.nbt.NBTType;
 import protocolsupport.utils.recyclable.RecyclableArrayList;
+import protocolsupport.zplatform.ServerPlatform;
+import protocolsupport.zplatform.itemstack.ItemStackWrapper;
+import protocolsupport.zplatform.itemstack.NBTTagCompoundWrapper;
+import protocolsupport.zplatform.itemstack.NBTTagListWrapper;
+import protocolsupport.zplatform.itemstack.NBTTagType;
 
 public class PEFakeEnchanting {
 
-	private NetworkItemStack inputOutputSlot = NetworkItemStack.NULL;
-	private NetworkItemStack lapisSlot = NetworkItemStack.NULL;
+	private ItemStackWrapper inputOutputSlot = ItemStackWrapper.NULL;
+	private ItemStackWrapper lapisSlot = ItemStackWrapper.NULL;
 	private int[] optionXP   = 	new int[] { 0,  0,  0};
 	private int[] optionEnch = 	new int[] {-1, -1, -1};
 	private int[] optionLvl  = 	new int[] { 1,  1,  1};
 
-	public void setInputOutputStack(NetworkItemStack inputOutputStack) {
+	public void setInputOutputStack(ItemStackWrapper inputOutputStack) {
 		this.inputOutputSlot = inputOutputStack;
 	}
 
-	public NetworkItemStack getInput() {
+	public ItemStackWrapper getInput() {
 		return inputOutputSlot;
 	}
 
-	public void setLapisStack(NetworkItemStack lapisStack) {
+	public void setLapisStack(ItemStackWrapper lapisStack) {
 		this.lapisSlot = lapisStack;
 	}
 
@@ -51,45 +49,38 @@ public class PEFakeEnchanting {
 		optionLvl[num] = lvl;
 	}
 
-	public NetworkItemStack[] compileInventory() {
-		NetworkItemStack[] contents = new NetworkItemStack[5];
+	public ItemStackWrapper[] compileInventory() {
+		ItemStackWrapper[] contents = new ItemStackWrapper[5];
 		contents[0] = inputOutputSlot;
 		contents[1] = lapisSlot;
 		for (int i = 0; i < 3; i++) {
 			//Create option item & nbt
-			if (optionEnch[i] < 0) {
-				contents[i + 2] = NetworkItemStack.NULL;
-				break;
-			}
-			NetworkItemStack option = inputOutputSlot.cloneItemStack();
-			if (option.isNull()) {
-				break;
-			}
-			NBTCompound tag = (option.getNBT() == null) ?
-				new NBTCompound() : option.getNBT();
+			if (optionEnch[i] < 0) { contents[i+2] = ItemStackWrapper.NULL; break;}
+			ItemStackWrapper option = inputOutputSlot.cloneItemStack();
+			if (option.isNull()) { break; }
+			NBTTagCompoundWrapper tag = (option.getTag() == null || option.getTag().isNull()) ?
+			ServerPlatform.get().getWrapperFactory().createEmptyNBTCompound() : option.getTag();
 			//Display
-			NBTCompound display = tag.getTagOfType("display", NBTType.COMPOUND);
-			if (display == null) {
-				display = new NBTCompound();
+			if (!tag.hasKeyOfType("display", NBTTagType.COMPOUND)) {
+				tag.setCompound("display", ServerPlatform.get().getWrapperFactory().createEmptyNBTCompound());
 			}
-			display.setTag("Name", new NBTString("Click to enchant"));
-			NBTList<NBTString> lore = new NBTList<>(NBTType.STRING);
-			lore.addTag(new NBTString("Requires"));
-			lore.addTag(new NBTString(optionXP[i] + (optionXP[i] == 1 ? " Enchantment Level" : " Enchantment Levels")));
-			lore.addTag(new NBTString((i + 1) + " Lapis Lazuli"));
-			display.setTag("Lore", lore);
-			tag.setTag("display", display);
+			NBTTagCompoundWrapper display = tag.getCompound("display");
+			display.setString("Name", "Click to enchant");
+			NBTTagListWrapper lore = ServerPlatform.get().getWrapperFactory().createEmptyNBTList();
+			lore.addString("Requires");
+			lore.addString(optionXP[i] + (optionXP[i] == 1 ? " Enchantment Level" : " Enchantment Levels"));
+			lore.addString((i + 1) + " Lapis Lazuli");
+			display.setList("Lore", lore);
+			tag.setCompound("display", display);
 			//Enchantment
-			NBTList<NBTCompound> ench = new NBTList<>(NBTType.COMPOUND);
-			if (ench.isEmpty()) {
-				ench.addTag(new NBTCompound());
-			}
-			ench.getTag(0).setTag("id", new NBTShort((short) optionEnch[i]));
-			ench.getTag(0).setTag("lvl", new NBTShort((short) optionLvl[i]));
-			tag.setTag("ench", ench);
+			NBTTagListWrapper ench = ServerPlatform.get().getWrapperFactory().createEmptyNBTList();
+			if(ench.isEmpty()) { ench.addCompound(ServerPlatform.get().getWrapperFactory().createEmptyNBTCompound()); }
+			ench.getCompound(0).setShort("id",  optionEnch[i]);
+			ench.getCompound(0).setShort("lvl", optionLvl [i]);
+			tag.setList("ench", ench);
 			//Wrap up
-			option.setNBT(tag);
-			contents[i + 2] = option;
+			option.setTag(tag);
+			contents[i+2] = option;
 		}
 		return contents;
 	}
@@ -101,7 +92,7 @@ public class PEFakeEnchanting {
 	public boolean handleInventoryClick(NetworkDataCache cache, InvTransaction transaction, RecyclableArrayList<ServerBoundPacketData> packets) {
 		if (transaction.getSlot() == 0) {
 			setInputOutputStack(transaction.getNewItem());
-		} else if (transaction.getSlot() == 1 && (transaction.getNewItem().isNull() || MaterialAPI.getItemByNetworkId(transaction.getNewItem().getTypeId()) == Material.INK_SAC)) {
+		} else if (transaction.getSlot() == 1 && (transaction.getNewItem().isNull() || (transaction.getNewItem().getType() == Material.INK_SACK && transaction.getNewItem().getData() == 4))) {
 			setLapisStack(transaction.getNewItem());
 		} else if ((transaction.getSlot() > 1 && transaction.getSlot() <= 4) && (transaction.getInventoryId() != PESource.POCKET_INVENTORY)) {
 			//If and only if on of the three fake hopper option slots are clicked proceed with the enchanting.
