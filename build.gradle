@@ -47,27 +47,22 @@ task setupFolders(type: DefaultTask) {doLast{
 	targetJarDirectory.mkdirs()
 	generatedResourcesDirectory.deleteDir()
 	generatedResourcesDirectory.mkdirs()
-}}
+    }
 
-task updateSpigot(type: BuildLibraryTask) {
-	targetDirectory = librariesRuntimeDirectory
-	targetLibraryName = "spigot-1.13.2-3.jar"
-	builderUrl = "https://papermc.io/ci/job/Paper-1.13/488/artifact/paperclip-488.jar"
-	buildCommand = "java -Dpaperclip.patchonly=true -jar {BUILDER}"
-	builtLibraryName = ["cache", "patched_1.13.2.jar"]
 }
 
 task updateRuntimeLibraries(type: UpdateLibrariesTask) {
 	directory = librariesRuntimeDirectory
-	libraries = []
-	manualLibraries = new HashSet<>(Arrays.asList(updateSpigot.targetLibraryName))
+	libraries = [
+		[name: 'spigot-1.13.2-2.jar', url: 'https://repo.perfectdreams.net/com/destroystokyo/paper/paper/1.13.2-R0.1-SNAPSHOT/paper-1.13.2-R0.1-SNAPSHOT.jar']
+	]
 }
 
 task updateShadeLibraries(type: UpdateLibrariesTask) {
 	directory = librariesShadeDirectory
 	libraries = [
-		[name: 'raknetserver-30.jar', url: 'https://github.com/yesdog/RakNetServer/releases/download/0.1/RakNetServer.jar'],
-		[name: 'udpserver-11.jar', url: 'https://build.true-games.org/job/UdpServerSocketChannel/11/artifact/target/UdpServerSocketChannel.jar']
+		[name: 'raknetserver-8.jar', url: 'https://build.true-games.org/job/RakNetServer/30/artifact/target/RakNetServer.jar'],
+		[name: 'udpserver-2.jar', url: 'https://build.true-games.org/job/UdpServerSocketChannel/11/artifact/target/UdpServerSocketChannel.jar']
 	]
 }
 
@@ -111,7 +106,7 @@ dependencies {
 compileJava {
 	options.encoding = 'UTF-8'
 	options.incremental = false
-	options.compilerArgs << ("-Aprotocolsupportbuildprocessor.generatedresourcesdirectory=" + newFile(generatedResourcesDirectory, resourcesDirectoryName, "preload").getAbsolutePath())
+	options.compilerArgs << ("-Aprotocolsupportbuildprocessor.generatedresourcesdirectory=" + new File(generatedResourcesDirectory, resourcesDirectoryName + "/preload").getAbsolutePath())
 }
 
 test {
@@ -120,12 +115,12 @@ test {
 
 
 task generateLocaleList(type: DefaultTask) {doLast{
-	File langsListFile = newFile(generatedResourcesDirectory, resourcesDirectoryName, "i18n", "languages")
+	File langsListFile = new File(generatedResourcesDirectory, resourcesDirectoryName + "/i18n/languages")
 	langsListFile.getParentFile().mkdirs()
 	langsListFile.createNewFile()
 	new PrintWriter(langsListFile).withCloseable({
 		writer ->
-			newFile(sourceSets.main.resources.srcDirs.iterator().next(), resourcesDirectoryName, "i18n").list()
+			new File(sourceSets.main.resources.srcDirs.iterator().next(), resourcesDirectoryName + "/i18n").list()
 			.each({
 				String[] split = it.split("[.]");
 				if (split.length == 2 && split[1].equals("json")) {
@@ -140,7 +135,7 @@ task generateInfo(type: DefaultTask) {doLast{
 	properties.setProperty("buildtime", new Date().format("yyyy.MM.dd 'at' HH:mm:ss z"))
 	properties.setProperty("buildhost", System.getProperty("protocolsupport.buildhost", "unknown"))
 	properties.setProperty("buildnumber", System.getProperty("protocolsupport.buildnumber", "unknown"))
-	File buildInfoFile = newFile(generatedResourcesDirectory, resourcesDirectoryName, "buildinfo")
+	File buildInfoFile = new File(generatedResourcesDirectory, resourcesDirectoryName + "/buildinfo")
 	buildInfoFile.getParentFile().mkdirs()
 	buildInfoFile.createNewFile()
 	new FileOutputStream(buildInfoFile).withCloseable({ properties.store(it, "Build info") })
@@ -170,17 +165,18 @@ shadowJar {
 	relocate 'udpserversocketchannel', 'protocolsupport.libs.udpserversocketchannel'
 }
 
-task copyFinalJarToTarget(type: DefaultTask) {doLast{
-	java.nio.file.Files.copy(
-		jar.archivePath.getAbsoluteFile().toPath(),
-		new File(targetJarDirectory, jar.baseName + '.jar').getAbsoluteFile().toPath(),
-		java.nio.file.StandardCopyOption.REPLACE_EXISTING
-	)
-}}
+task copyFinalJarToTarget(type: Copy) {
+	// JitPack searches for the output jar at the standard Gradle output directory (jar.archivePath)
+	// By copying it from there to our target destination JitPack can archive it in a Maven repository
+	from jar.archivePath.getPath()
+	into 'target'
+
+	//remove version suffix
+	rename (jar.archiveName, jar.baseName + '.jar')
+}
 
 compileJava.dependsOn(clean)
 compileJava.dependsOn(setupFolders)
-compileJava.dependsOn(updateSpigot)
 compileJava.dependsOn(updateRuntimeLibraries)
 compileJava.dependsOn(updateShadeLibraries)
 compileJava.finalizedBy(test)
