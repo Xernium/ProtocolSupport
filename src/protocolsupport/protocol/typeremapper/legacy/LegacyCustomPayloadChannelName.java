@@ -69,7 +69,15 @@ public class LegacyCustomPayloadChannelName {
 				return MODERN_BUNGEE;
 			}
 			default: {
-				return NamespacedKeyUtils.combine("l", invalid_pattern.matcher(legacyName.toLowerCase()).replaceAll(""));
+				String[] split = legacyName.toLowerCase().split(NamespacedKeyUtils.SEPARATOR, 2);
+				if (split.length == 1) {
+					return NamespacedKeyUtils.combine("l", invalid_pattern.matcher(split[0]).replaceAll(""));
+				} else {
+					return NamespacedKeyUtils.combine(
+						invalid_pattern.matcher(split[0]).replaceAll(""),
+						invalid_pattern.matcher(split[1]).replaceAll("")
+					);
+				}
 			}
 		}
 	}
