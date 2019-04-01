@@ -19,12 +19,8 @@ public class WindowCache {
 		this.horseId = horseId;
 	}
 
-	public WindowType getOpenedWindow(int windowId) {
-		if (windowId == WINDOW_ID_PLAYER) {
-			return WindowType.PLAYER;
-		} else {
-			return windowType;
-		}
+	public WindowType getOpenedWindow() {
+		return windowType;
 	}
 
 	public WindowType getOpenedWindow() {
@@ -32,7 +28,7 @@ public class WindowCache {
 	}
 
 	public boolean isValidWindowId(int windowId) {
-		return windowId == WINDOW_ID_PLAYER || windowId == this.windowId;
+		return windowId == this.windowId;
 	}
 
 	public int getOpenedWindowId() {
