@@ -58,6 +58,9 @@ public class MerchantDataSerializer {
 		to.writeByte(PEDataValues.WINDOWTYPE.getTable(version).getRemap(WindowType.VILLAGER.toLegacyId()));
 		VarNumberSerializer.writeSVarInt(to, 0); //?
 		VarNumberSerializer.writeSVarInt(to, 0); //?
+		if (version.isAfterOrEq(ProtocolVersion.MINECRAFT_PE_1_8)) {
+			VarNumberSerializer.writeSVarInt(to, 0); //?
+		}
 		to.writeBoolean(true); //Is always willing!
 		VarNumberSerializer.writeSVarLong(to, villagerId);
 		VarNumberSerializer.writeSVarLong(to, cache.getWatchedEntityCache().getSelfPlayerEntityId());

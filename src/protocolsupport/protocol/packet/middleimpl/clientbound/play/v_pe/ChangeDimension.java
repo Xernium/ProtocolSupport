@@ -35,7 +35,7 @@ public class ChangeDimension extends MiddleChangeDimension {
 	public RecyclableCollection<ClientBoundPacketData> toData() {
 		RecyclableArrayList<ClientBoundPacketData> packets = RecyclableArrayList.create();
 		if (cache.getWindowCache().getOpenedWindow() != WindowType.PLAYER) {
-			packets.add(InventoryClose.create(connection.getVersion(), cache.getWindowCache().getOpenedWindowId()));
+			packets.add(InventoryClose.create(cache.getWindowCache().getOpenedWindowId()));
 			cache.getWindowCache().closeWindow();
 		}
 		packets.add(createRaw(0, 0, 0, getPeDimensionId(dimension)));

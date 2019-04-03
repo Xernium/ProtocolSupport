@@ -1,6 +1,5 @@
 package protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe;
 
-import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.packet.middle.clientbound.play.MiddleInventoryClose;
 import protocolsupport.protocol.packet.middleimpl.ClientBoundPacketData;
@@ -20,10 +19,10 @@ public class InventoryClose extends MiddleInventoryClose {
 		cache.getPEInventoryCache().getTransactionRemapper().clear();
 		cache.getPEInventoryCache().setPreviousWindowId(0);
 		PEFakeContainer.destroyContainers(connection, cache);
-		return RecyclableSingletonList.create(create(connection.getVersion(), windowId));
+		return RecyclableSingletonList.create(create(windowId));
 	}
 
-	public static ClientBoundPacketData create(ProtocolVersion version, int windowId) {
+	public static ClientBoundPacketData create(int windowId) {
 		ClientBoundPacketData serializer = ClientBoundPacketData.create(PEPacketIDs.CONTAINER_CLOSE);
 		serializer.writeByte(windowId);
 		return serializer;
