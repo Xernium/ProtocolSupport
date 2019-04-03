@@ -8,12 +8,15 @@ import protocolsupport.protocol.packet.middle.ServerBoundMiddlePacket;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleBlockDig;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleClientCommand;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleEntityAction;
+import protocolsupport.protocol.packet.middle.serverbound.play.MiddleUseEntity;
 import protocolsupport.protocol.packet.middleimpl.ServerBoundPacketData;
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
+import protocolsupport.protocol.utils.networkentity.NetworkEntity;
 import protocolsupport.protocol.utils.types.Position;
+import protocolsupport.protocol.utils.types.UsedHand;
 import protocolsupport.utils.recyclable.RecyclableCollection;
 import protocolsupport.utils.recyclable.RecyclableEmptyList;
 import protocolsupport.utils.recyclable.RecyclableSingletonList;
@@ -81,6 +84,11 @@ public class PlayerAction extends ServerBoundMiddlePacket {
 				return RecyclableSingletonList.create(serializer);
 			}
 			case START_BREAK: {
+				NetworkEntity itemFrame = cache.getPETileCache().getItemFrameAt(blockPosition);
+				if (itemFrame != null) {
+					return RecyclableSingletonList.create(MiddleUseEntity.create(itemFrame.getId(),
+						MiddleUseEntity.Action.ATTACK, null, UsedHand.MAIN));
+				}
 				breakPosition = blockPosition.clone();
 				return RecyclableSingletonList.create(MiddleBlockDig.create(MiddleBlockDig.Action.START_DIG, breakPosition, face));
 			}

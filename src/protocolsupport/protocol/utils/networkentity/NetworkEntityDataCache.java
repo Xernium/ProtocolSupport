@@ -1,8 +1,11 @@
 package protocolsupport.protocol.utils.networkentity;
 
+import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
 
+import protocolsupport.protocol.utils.types.ChunkCoord;
 import protocolsupport.protocol.utils.types.NetworkItemStack;
+import protocolsupport.protocol.utils.types.Position;
 import protocolsupport.utils.Utils;
 
 public class NetworkEntityDataCache {
@@ -21,6 +24,7 @@ public class NetworkEntityDataCache {
 	protected float posZ = 0;
 	protected byte yaw = 0;
 	protected byte pitch = 0;
+	protected boolean onGround = false;
 	protected Vector riderPosition = null;
 	protected Float rotationlock = null;
 	protected Equipment equipment = null;
@@ -157,6 +161,14 @@ public class NetworkEntityDataCache {
 		this.posZ = z;
 	}
 
+	public ChunkCoord getChunkCoord() {
+		return getPosition().getChunkCoord();
+	}
+
+	public Position getPosition() {
+		return new Position((int) Math.floor(getPosX()), (int) Math.floor(getPosY()), (int) Math.floor(getPosZ()));
+	}
+
 	public byte getYaw() {
 		return yaw;
 	}
@@ -171,6 +183,14 @@ public class NetworkEntityDataCache {
 
 	public void setPitch(byte pitch) {
 		this.pitch = pitch;
+	}
+
+	public boolean isOnGround() {
+		return onGround;
+	}
+
+	public void setOnGround(boolean onGround) {
+		this.onGround = onGround;
 	}
 
 	public Equipment getEquipment() {

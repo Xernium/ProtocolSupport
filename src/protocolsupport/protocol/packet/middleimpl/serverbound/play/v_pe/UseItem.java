@@ -7,11 +7,13 @@ import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.packet.middle.ServerBoundMiddlePacket;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleBlockDig;
 import protocolsupport.protocol.packet.middle.serverbound.play.MiddleBlockPlace;
+import protocolsupport.protocol.packet.middle.serverbound.play.MiddleUseEntity;
 import protocolsupport.protocol.packet.middleimpl.ServerBoundPacketData;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.inventory.PEInventory;
+import protocolsupport.protocol.utils.networkentity.NetworkEntity;
 import protocolsupport.protocol.utils.types.BlockFace;
 import protocolsupport.protocol.utils.types.GameMode;
 import protocolsupport.protocol.utils.types.NetworkItemStack;
@@ -63,9 +65,12 @@ public class UseItem extends ServerBoundMiddlePacket {
 				break;
 			}
 			case USE_CLICK_BLOCK: {
+				NetworkEntity itemFrame = cache.getPETileCache().getItemFrameAt(position);
 				packets.add(MiddleBlockPlace.create(position, face, UsedHand.MAIN, cX, cY, cZ));
 				if (PEInventory.shouldDoClickUpdate(itemstack)) {
 					packets.add(MiddleBlockPlace.create(Position.ZERO, -1, UsedHand.MAIN, cX, cY, cZ));
+				} else if (itemFrame != null) {
+					packets.add(MiddleUseEntity.create(itemFrame.getId(), MiddleUseEntity.Action.INTERACT, null, UsedHand.MAIN));
 				}
 				//Modify position to request server update for the correct block.
 				BlockFace.getById(face).modPosition(position);

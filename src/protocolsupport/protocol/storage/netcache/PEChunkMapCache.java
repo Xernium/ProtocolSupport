@@ -3,6 +3,7 @@ package protocolsupport.protocol.storage.netcache;
 import java.util.HashSet;
 import java.util.Set;
 
+import protocolsupport.protocol.utils.networkentity.NetworkEntity;
 import protocolsupport.protocol.utils.types.ChunkCoord;
 
 public class PEChunkMapCache {
@@ -23,6 +24,10 @@ public class PEChunkMapCache {
 
 	public boolean isMarkedAsSent(ChunkCoord coord) {
 		return sentChunks.contains(coord);
+	}
+
+	public boolean isMarkedAsSent(NetworkEntity entity) {
+		return isMarkedAsSent(entity.getDataCache().getChunkCoord());
 	}
 
 }

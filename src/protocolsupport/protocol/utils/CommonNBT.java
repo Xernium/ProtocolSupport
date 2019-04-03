@@ -10,6 +10,7 @@ import protocolsupport.protocol.utils.types.nbt.NBTByte;
 import protocolsupport.protocol.utils.types.nbt.NBTCompound;
 import protocolsupport.protocol.utils.types.nbt.NBTString;
 import protocolsupport.protocol.utils.types.nbt.NBTType;
+import protocolsupport.protocol.utils.types.nbt.NBTShort;
 
 public class CommonNBT {
 
@@ -36,6 +37,17 @@ public class CommonNBT {
 			rootTag.setTag(DISPLAY, display);
 		}
 		return display;
+	}
+
+	public static NBTCompound createItemNBT(NetworkItemStack itemStack) {
+		NBTCompound itemNBT = new NBTCompound();
+		itemNBT.setTag("id", new NBTShort((short) itemStack.getTypeId()));
+		itemNBT.setTag("Count", new NBTByte((byte) itemStack.getAmount()));
+		itemNBT.setTag("Damage", new NBTShort((byte) itemStack.getLegacyData()));
+		if (itemStack.getNBT() != null) {
+			itemNBT.setTag("tag", itemStack.getNBT());
+		}
+		return itemNBT;
 	}
 
 	public static final String BOOK_ENCHANTMENTS = "StoredEnchantments";

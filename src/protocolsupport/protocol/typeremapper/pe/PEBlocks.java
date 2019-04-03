@@ -34,12 +34,12 @@ public class PEBlocks {
 	private static final int[] pcToPeRuntimeId = new int[MinecraftData.BLOCKDATA_COUNT];
 	private static final int[] pcWaterlogged = new int[MinecraftData.BLOCKDATA_COUNT];
 	private static final EnumMap<ProtocolVersion, Integer> waterRuntime = new EnumMap<>(ProtocolVersion.class);
+	private static final ArrayList<PEBlock> peBlocks = new ArrayList<>();
 
 	private static final int CAN_BE_WATERLOGGED = 1;
 	private static final int IS_WATERLOGGED = 2;
 
 	static {
-		final ArrayList<PEBlock> peBlocks = new ArrayList<>();
 		final JsonObject peMappings = ResourceUtils.getAsJson(PEDataValues.getResourcePath("blockmapping.json"));
 		//Load in PE blockdefinitions (used for login definition list and mapping name+data -> runtimeid)
 		for (JsonElement element : ResourceUtils.getAsIterableJson(PEDataValues.getResourcePath("blockdefinition.json"))) {
@@ -62,6 +62,7 @@ public class PEBlocks {
 			if (peMappings.has(data.getAsString())) {
 				PEBlock peBlock = new PEBlock(JsonUtils.getJsonObject(peMappings, data.getAsString()));
 				pcToPeRuntimeId[i] = peBlocks.indexOf(peBlock);
+				//System.out.println("REMAPPED [" + i + "] (" + data.getAsString() + ") TO: " + peBlock.getName() + ":" + peBlock.getData());
 			}
 		}
 		//Specify water block for waterlog remapping.
@@ -76,6 +77,10 @@ public class PEBlocks {
 			def.writeShortLE(block.getData());
 		});
 		peBlockDef = MiscSerializer.readAllBytes(def);
+	}
+
+	public static int getPocketRuntimeId(PEBlock peBlock) {
+		return peBlocks.indexOf(peBlock);
 	}
 
 	public static int getPocketRuntimeId(int pcRuntimeId) {
@@ -106,7 +111,7 @@ public class PEBlocks {
 		return waterRuntime.get(version);
 	}
 
-	private static class PEBlock {
+	public static class PEBlock {
 
 		private final String name;
 		private final short data;

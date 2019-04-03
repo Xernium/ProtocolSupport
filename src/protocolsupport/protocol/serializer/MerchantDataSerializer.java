@@ -4,13 +4,12 @@ import io.netty.buffer.ByteBuf;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.storage.netcache.NetworkDataCache;
 import protocolsupport.protocol.typeremapper.pe.PEDataValues;
+import protocolsupport.protocol.utils.CommonNBT;
 import protocolsupport.protocol.utils.types.MerchantData;
 import protocolsupport.protocol.utils.types.WindowType;
-import protocolsupport.protocol.utils.types.nbt.NBTByte;
 import protocolsupport.protocol.utils.types.nbt.NBTCompound;
 import protocolsupport.protocol.utils.types.nbt.NBTInt;
 import protocolsupport.protocol.utils.types.nbt.NBTList;
-import protocolsupport.protocol.utils.types.nbt.NBTShort;
 import protocolsupport.protocol.utils.types.nbt.NBTType;
 import protocolsupport.protocol.utils.types.MerchantData.TradeOffer;
 import protocolsupport.protocol.utils.types.NetworkItemStack;
@@ -68,10 +67,10 @@ public class MerchantDataSerializer {
 		if (merchdata != null) {
 			for (TradeOffer offer : merchdata.getOffers()) {
 				NBTCompound recipe = new NBTCompound();
-				recipe.setTag("buyA", ItemStackToPENBT(version, locale, offer.getItemStack1()));
-				recipe.setTag("sell", ItemStackToPENBT(version, locale, offer.getResult()));
+				recipe.setTag("buyA", convertStack(version, locale, offer.getItemStack1()));
+				recipe.setTag("sell", convertStack(version, locale, offer.getResult()));
 				if (offer.hasItemStack2()) {
-					recipe.setTag("buyB", ItemStackToPENBT(version, locale, offer.getItemStack2()));
+					recipe.setTag("buyB", convertStack(version, locale, offer.getItemStack2()));
 				}
 				recipe.setTag("uses", new NBTInt(offer.isDisabled() ? offer.getMaxUses() : offer.getUses()));
 				recipe.setTag("maxUses", new NBTInt(offer.getMaxUses()));
@@ -87,17 +86,8 @@ public class MerchantDataSerializer {
 		return version.isPC() && version.isAfterOrEq(ProtocolVersion.MINECRAFT_1_8);
 	}
 
-	//TODO: Find proper place for this.
-	private static NBTCompound ItemStackToPENBT(ProtocolVersion version, String locale, NetworkItemStack itemstack) {
-		NBTCompound item = new NBTCompound();
-		itemstack = ItemStackSerializer.remapItemToClient(version, locale, itemstack.cloneItemStack());
-		item.setTag("Count", new NBTByte((byte) itemstack.getAmount()));
-		item.setTag("Damage", new NBTShort((short) itemstack.getLegacyData()));
-		item.setTag("id", new NBTShort((short) itemstack.getTypeId()));
-		if ((itemstack.getNBT() != null)) {
-			item.setTag("tag", itemstack.getNBT());
-		}
-		return item;
+	private static NBTCompound convertStack(ProtocolVersion version, String locale, NetworkItemStack itemstack) {
+		return CommonNBT.createItemNBT(ItemStackSerializer.remapItemToClient(version, locale, itemstack.cloneItemStack()));
 	}
 
 }

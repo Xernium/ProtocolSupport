@@ -6,12 +6,18 @@ import protocolsupport.protocol.packet.middle.clientbound.play.MiddleSpawnObject
 import protocolsupport.protocol.packet.middleimpl.ClientBoundPacketData;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata.PeMetaBase;
 import protocolsupport.protocol.serializer.DataWatcherSerializer;
+import protocolsupport.protocol.typeremapper.itemstack.ItemStackRemapper;
 import protocolsupport.protocol.typeremapper.pe.PEBlocks;
 import protocolsupport.protocol.typeremapper.pe.PEDataValues;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
+import protocolsupport.protocol.utils.datawatcher.DataWatcherObjectIndex;
+import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectItemStack;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectSVarInt;
+import protocolsupport.protocol.utils.networkentity.NetworkEntityDataCache;
 import protocolsupport.protocol.utils.networkentity.NetworkEntityItemDataCache;
+import protocolsupport.protocol.utils.types.NetworkItemStack;
 import protocolsupport.utils.CollectionsUtils.ArrayMap;
+import protocolsupport.utils.recyclable.RecyclableArrayList;
 import protocolsupport.utils.recyclable.RecyclableCollection;
 import protocolsupport.utils.recyclable.RecyclableEmptyList;
 import protocolsupport.utils.recyclable.RecyclableSingletonList;
@@ -27,13 +33,22 @@ public class SpawnObject extends MiddleSpawnObject {
 	public RecyclableCollection<ClientBoundPacketData> toData() {
 		ProtocolVersion version = connection.getVersion();
 		ArrayMap<DataWatcherObject<?>> spawnmeta = null;
+		NetworkEntityDataCache dataCache = entity.getDataCache();
 		switch (entity.getType()) {
 			case ITEM: {
-				((NetworkEntityItemDataCache) entity.getDataCache()).setData(x, y, z, motX / 8000F, motY / 8000F, motZ / 8000F);
+				((NetworkEntityItemDataCache) dataCache).setData(x, y, z, motX / 8000F, motY / 8000F, motZ / 8000F);
 				return RecyclableEmptyList.get();
 			}
 			case ITEM_FRAME: {
-				return RecyclableEmptyList.get();
+				RecyclableArrayList<ClientBoundPacketData> packets = RecyclableArrayList.create();
+				dataCache.setPos((float) x, (float) y, (float) z);
+				cache.getPETileCache().addItemFrame(entity, objectdata);
+				cache.getPETileCache().updateItemFrame(connection, entity, entityRemapper);
+				if (cache.getPEChunkMapCache().isMarkedAsSent(entity)) {
+					//System.out.println("item frame chunk already sent ");
+					cache.getPETileCache().updateForChunk(version, dataCache.getChunkCoord(), packets);
+				}
+				return packets;
 			}
 			case FALLING_OBJECT: {
 				spawnmeta = new ArrayMap<>(DataWatcherSerializer.MAX_USED_META_INDEX + 1);
@@ -51,9 +66,9 @@ public class SpawnObject extends MiddleSpawnObject {
 					pitch += offset.getPitch();
 					yaw += offset.getYaw();
 				}
-				entity.getDataCache().setPos((float) x, (float) y, (float) z);
-				entity.getDataCache().setYaw(yaw);
-				entity.getDataCache().setPitch(pitch);
+				dataCache.setPos((float) x, (float) y, (float) z);
+				dataCache.setYaw(yaw);
+				dataCache.setPitch(pitch);
 				return RecyclableSingletonList.create(SpawnLiving.create(
 					version, cache.getAttributesCache().getLocale(),
 					entity,
